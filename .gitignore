@@ -1,0 +1,10 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Large data
+data/*.csv
+data/raw/
+data/pre_processed/
