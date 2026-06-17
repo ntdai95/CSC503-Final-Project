@@ -14,6 +14,7 @@
 │   │   └── loan_data_preprocessed_xgb.csv
 ├── notebooks
 │   ├── data_preprocessing.ipynb
+│   ├── data_statistics.ipynb
 ```
 
 ### Install
