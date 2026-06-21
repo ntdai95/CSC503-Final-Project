@@ -8,3 +8,5 @@ venv/
 data/*.csv
 data/raw/
 data/pre_processed/
+# OS files
+.DS_Store
