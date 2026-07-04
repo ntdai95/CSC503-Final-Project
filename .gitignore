@@ -4,9 +4,16 @@ __pycache__/
 .venv/
 venv/
 
+# Notebook Checkpoints
+/notebooks/.ipynb_checkpoints/
+
 # Large data
 data/*.csv
 data/raw/
 data/pre_processed/
+
 # OS files
 .DS_Store
+
+# VS Code
+.vscode/
