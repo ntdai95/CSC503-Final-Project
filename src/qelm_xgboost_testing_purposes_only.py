@@ -1,4 +1,5 @@
 from pathlib import Path
+import types
 import pandas as pd
 from baseline_xgboost import BaselineXGBoost
 from smote_xgboost import SmoteXGBoost
