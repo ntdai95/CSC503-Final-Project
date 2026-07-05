@@ -8,7 +8,9 @@ from xgboost import XGBClassifier
 
 
 class BaseModelXGBoost:
-    def __init__(self):
+    def __init__(self, train_df, test_df):
+        self.train_df = train_df
+        self.test_df = test_df
         self.target_column = "loan_status"
         self.random_state = 42
         self.n_iter = 40

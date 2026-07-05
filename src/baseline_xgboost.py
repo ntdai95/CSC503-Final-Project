@@ -7,12 +7,10 @@ INPUT_TRAINING_DATA_PATH = Path(__file__).resolve().parent.parent / "data" / "pr
 INPUT_TESTING_DATA_PATH = Path(__file__).resolve().parent.parent / "data" / "pre-processed" / "loan_data_raw_test_1.csv"
 
 class BaselineXGBoost(BaseModelXGBoost):
-    def __init__(self):
-        self.train_df = pd.read_csv(INPUT_TRAINING_DATA_PATH)
-        self.test_df = pd.read_csv(INPUT_TESTING_DATA_PATH)
-        super().__init__()
+    def __init__(self, train_df, test_df):
+        super().__init__(train_df, test_df)
 
 
 if __name__ == "__main__":
-    baseline_xgboost = BaselineXGBoost()
+    baseline_xgboost = BaselineXGBoost(pd.read_csv(INPUT_TRAINING_DATA_PATH), pd.read_csv(INPUT_TESTING_DATA_PATH))
     baseline_xgboost.run()
