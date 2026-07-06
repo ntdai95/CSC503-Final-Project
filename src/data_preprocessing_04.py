@@ -6,8 +6,8 @@ INPUT_DATA_PATH = Path(__file__).resolve().parent.parent / "data" / "pre-process
 OUTPUT_DIRECTORY = Path(__file__).resolve().parent.parent / "data" / "pre-processed"
 
 class DataPreprocessing:
-    def __init__(self):
-        self.df = pd.read_csv(INPUT_DATA_PATH)
+    def __init__(self, df):
+        self.df = df
         self.bias_column = "previous_loan_defaults_on_file"
         self.rounded_column = "person_education"
         self.education_mapping_rules = {
@@ -35,5 +35,5 @@ class DataPreprocessing:
 
 
 if __name__ == "__main__":
-    data_preprocessing = DataPreprocessing()
+    data_preprocessing = DataPreprocessing(pd.read_csv(INPUT_DATA_PATH))
     preprocessed_df = data_preprocessing.run()

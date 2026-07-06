@@ -6,13 +6,14 @@ INPUT_DATA_PATH = Path(__file__).resolve().parent.parent / "data" / "raw" / "loa
 OUTPUT_DIRECTORY = Path(__file__).resolve().parent.parent / "data" / "pre-processed"
 
 class HardOutlierFilters:
-    def __init__(self):
-        self.raw_df = pd.read_csv(INPUT_DATA_PATH)
+    def __init__(self, df):
+        self.raw_df = df
         self.filter_cols = [
             "person_age", "person_emp_exp", "credit_score",
             "person_income", "loan_amnt", "loan_int_rate",
             "loan_percent_income", "cb_person_cred_hist_length",
         ]
+        
         self.bad_mask = None
         self.clean_df = None
 
@@ -47,5 +48,5 @@ class HardOutlierFilters:
 
 
 if __name__ == "__main__":
-    hard_outlier_filters = HardOutlierFilters()
+    hard_outlier_filters = HardOutlierFilters(pd.read_csv(INPUT_DATA_PATH))
     clean_df = hard_outlier_filters.run()

@@ -8,15 +8,21 @@ from smote_xgboost_07 import SmoteXGBoost
 from weighted_xgboost_07 import WeightedXGBoost
 
 
+RAW_DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "raw"
 DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "pre-processed"
+
+raw_df = pd.read_csv(RAW_DATA_DIR / "loan_data.csv")
+HardOutlierFilters(raw_df).run()
+
+hard_filtered_df = pd.read_csv(DATA_DIR / "loan_data_hard_filtered.csv")
+DataPreprocessing(hard_filtered_df).run()
+
+preprocessed_df = pd.read_csv(DATA_DIR / "loan_data_preprocessed.csv")
+LoanDataPreprocessing(preprocessed_df).run()
+
 raw_test = pd.read_csv(DATA_DIR / "loan_data_raw_test_1.csv")
 clean_train = pd.read_csv(DATA_DIR / "loan_data_clean_train_3.csv")
 smoted_train = pd.read_csv(DATA_DIR / "loan_data_smoted_raw_train_4.csv")
-
-
-HardOutlierFilters().run()
-DataPreprocessing().run()
-LoanDataPreprocessing().run()
 baseline_xgboost = BaselineXGBoost(clean_train, raw_test)
 baseline_xgboost.run()
 smote_xgboost = SmoteXGBoost(smoted_train, raw_test)

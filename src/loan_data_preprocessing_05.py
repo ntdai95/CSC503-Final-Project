@@ -9,8 +9,8 @@ INPUT_DATA_PATH = Path(__file__).resolve().parent.parent / "data" / "pre-process
 OUTPUT_DIRECTORY = Path(__file__).resolve().parent.parent / "data" / "pre-processed"
 
 class LoanDataPreprocessing:
-    def __init__(self):
-        self.df = pd.read_csv(INPUT_DATA_PATH)
+    def __init__(self, df):
+        self.df = df
         self.target_column = "loan_status"
         self.test_size = 0.2
         self.random_state = 42
@@ -79,5 +79,5 @@ class LoanDataPreprocessing:
 
 if __name__ == "__main__":
     # How to call:
-    loan_data_preprocessing = LoanDataPreprocessing()
+    loan_data_preprocessing = LoanDataPreprocessing(pd.read_csv(INPUT_DATA_PATH))
     train_df, test_df = loan_data_preprocessing.run()
