@@ -39,7 +39,6 @@ class BaseModelXGBoost:
         self.xgb_search = None
         self.best_xgb_model = None
         self.y_pred = None
-        self.y_proba = None
 
     def tune(self):
         xgb_model = XGBClassifier(objective="binary:logistic", eval_metric="logloss", tree_method="hist",
@@ -53,7 +52,6 @@ class BaseModelXGBoost:
         self.best_xgb_model = self.xgb_search.best_estimator_
 
     def evaluate(self):
-        self.y_proba = self.best_xgb_model.predict_proba(self.X_test)[:, 1]
         self.y_pred = self.best_xgb_model.predict(self.X_test)
         cm = confusion_matrix(self.y_test, self.y_pred)
         by_class_accuracy = cm.diagonal() / cm.sum(axis=1)
