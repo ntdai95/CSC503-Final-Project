@@ -38,6 +38,7 @@ pip3 install -r requirements.txt
 
 ### Neural Network
 
+run the following command in the root directory
 ```bash
 ### Preprocessing
 python -m src.preprocessing.preprocessing_neural_network
