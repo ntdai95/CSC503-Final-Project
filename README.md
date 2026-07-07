@@ -7,47 +7,58 @@
 ```
 ├── data
 │   ├── raw
-│   │   └── loan_data.csv
+│   │   ├── loan_data.csv
 │   │   └── ...
-│   ├── pre_processed
-│   │   └── loan_data_preprocessed_nn.csv
-│   │   └── loan_data_preprocessed_xgb.csv
+│   └── pre-processed
+│       ├── loan_data_preprocessed.csv
+│       ├── loan_data_nn_normal_train.csv
+│       ├── loan_data_nn_normal_train_smote.csv
+│       └── loan_data_nn_normal_test.csv
 ├── notebooks
 │   ├── data_preprocessing.ipynb
 │   ├── data_statistics.ipynb
-├── src
-│   ├── model/
-│   │   ├── __init__.py
-│   │   ├── neural_network/
-│   │       ├── __init__.py
-│   │       ├── base_neural_network.py
-│   │       ├── neural_network.py
-│   │       ├── smote_neural_network.py
-│   ├── preprocessing/
-│       ├── __init__.py
-│       ├── preprocessing_neural_network.py
-│       ├── preprocessing_neural_network_smote.py
+│   ├── 07_smote_NN.ipynb
+│   ├── 08_neural_network.ipynb
+│   └── ...
+└── src
+    ├── config.py
+    ├── model
+    │   ├── __init__.py
+    │   └── neural_network
+    │       ├── __init__.py
+    │       ├── base_neural_network.py
+    │       ├── neural_network.py
+    │       └── smote_neural_network.py
+    └── preprocessing
+        ├── __init__.py
+        ├── preprocessing_neural_network.py
+        └── preprocessing_neural_network_smote.py
 ```
 
 ### Install
 Python version: Python 3.13.7
-
 ```bash
 pip3 install -r requirements.txt
 ```
 
 ### Neural Network
-
-run the following command in the root directory
+Run the following commands from the project root:
 ```bash
-### Preprocessing
+# Preprocessing
 python -m src.preprocessing.preprocessing_neural_network
-python -m src.preprocessing.preprocessing_neural_network_smote # generate SMOTE dataset
-### Model
+python -m src.preprocessing.preprocessing_neural_network_smote
+
+# Train Model
 python -m src.model.neural_network.neural_network
-python -m src.model.neural_network.smote_neural_network # train model with SMOTE dataset
+python -m src.model.neural_network.smote_neural_network
 ```
 
-The model commands save:
+The train model commands save:
 - `models/neural_network.joblib`
 - `models/neural_network_smote.joblib`
+
+### Parameter Configuration
+Parameters are stored in:
+```text
+src/config.py
+```

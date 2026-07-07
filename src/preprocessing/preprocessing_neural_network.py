@@ -4,19 +4,29 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder, StandardScaler
 
+try:
+    from src.config import DATA_COLUMN_CONFIG, PREPROCESSING_NEURAL_NETWORK_CONFIG
+except ModuleNotFoundError:
+    from config import DATA_COLUMN_CONFIG, PREPROCESSING_NEURAL_NETWORK_CONFIG
+
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-INPUT_DATA_PATH = PROJECT_ROOT / "data" / "pre-processed" / "loan_data_preprocessed.csv"
+INPUT_DATA_PATH = PROJECT_ROOT / "data" / "pre-processed" / PREPROCESSING_NEURAL_NETWORK_CONFIG["input_filename"]
 OUTPUT_DIRECTORY = PROJECT_ROOT / "data" / "pre-processed"
 
 
 class NeuralNetworkPreprocessing:
-    def __init__(self, df):
+    def __init__(self, df, config=None, data_config=None):
         self.df = df
-        self.target_column = "loan_status"
-        self.education_column = "person_education"
-        self.test_size = 0.2
-        self.random_state = 1
+        self.config = {**PREPROCESSING_NEURAL_NETWORK_CONFIG, **(config or {})}
+        self.data_config = {**DATA_COLUMN_CONFIG, **(data_config or {})}
+
+        self.target_column = self.data_config["target_column"]
+        self.education_column = self.data_config["education_column"]
+        self.education_min = self.data_config["education_min"]
+        self.education_max = self.data_config["education_max"]
+        self.test_size = self.config["split_test_size"]
+        self.random_state = self.config["split_random_state"]
 
         self.train_df = None
         self.test_df = None
@@ -51,7 +61,7 @@ class NeuralNetworkPreprocessing:
 
     def transform_features(self, X):
         continuous_values = self.continuous_scaler.transform(X[self.continuous_columns])
-        education_values = X[[self.education_column]].round().clip(1, 5).astype(int).to_numpy()
+        education_values = X[[self.education_column]].round().clip(self.education_min, self.education_max).astype(int).to_numpy()
         categorical_values = self.onehot_encoder.transform(X[self.categorical_columns])
 
         transformed_df = pd.DataFrame(np.hstack([continuous_values, education_values, categorical_values]),
@@ -73,8 +83,8 @@ class NeuralNetworkPreprocessing:
 
     def save(self):
         OUTPUT_DIRECTORY.mkdir(parents=True, exist_ok=True)
-        self.train_processed_df.to_csv(OUTPUT_DIRECTORY / "loan_data_nn_normal_train.csv", index=False)
-        self.test_processed_df.to_csv(OUTPUT_DIRECTORY / "loan_data_nn_normal_test.csv", index=False)
+        self.train_processed_df.to_csv(OUTPUT_DIRECTORY / self.config["train_output_filename"], index=False)
+        self.test_processed_df.to_csv(OUTPUT_DIRECTORY / self.config["test_output_filename"], index=False)
 
     def run(self):
         self.preprocess()

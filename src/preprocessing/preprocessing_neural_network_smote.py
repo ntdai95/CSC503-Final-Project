@@ -4,16 +4,21 @@ import pandas as pd
 from imblearn.over_sampling import SMOTENC
 from .preprocessing_neural_network import NeuralNetworkPreprocessing
 
+try:
+    from src.config import PREPROCESSING_NEURAL_NETWORK_CONFIG, PREPROCESSING_NEURAL_NETWORK_SMOTE_CONFIG
+except ModuleNotFoundError:
+    from config import PREPROCESSING_NEURAL_NETWORK_CONFIG, PREPROCESSING_NEURAL_NETWORK_SMOTE_CONFIG
+
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-INPUT_DATA_PATH = PROJECT_ROOT / "data" / "pre-processed" / "loan_data_preprocessed.csv"
+INPUT_DATA_PATH = PROJECT_ROOT / "data" / "pre-processed" / PREPROCESSING_NEURAL_NETWORK_CONFIG["input_filename"]
 OUTPUT_DIRECTORY = PROJECT_ROOT / "data" / "pre-processed"
 
 
 class NeuralNetworkSmotePreprocessing(NeuralNetworkPreprocessing):
-    def __init__(self, df):
-        super().__init__(df)
-        self.k_neighbors = 5
+    def __init__(self, df, preprocessing_config=None, smote_config=None, data_config=None):
+        super().__init__(df, preprocessing_config, data_config)
+        self.smote_config = {**PREPROCESSING_NEURAL_NETWORK_SMOTE_CONFIG, **(smote_config or {})}
         self.smote_train_df = None
 
     def apply_smote(self):
@@ -21,19 +26,22 @@ class NeuralNetworkSmotePreprocessing(NeuralNetworkPreprocessing):
         y_train = self.train_df[self.target_column]
 
         continuous_values = self.continuous_scaler.transform(X_train[self.continuous_columns])
-        education_values = X_train[[self.education_column]].round().clip(1, 5).astype(int).to_numpy()
+        education_values = X_train[[self.education_column]].round().clip(self.education_min, self.education_max).astype(int).to_numpy()
         categorical_values = self.category_encoder.transform(X_train[self.categorical_columns])
         smote_columns = self.continuous_columns + [self.education_column] + self.categorical_columns
         X_smote = np.hstack([continuous_values, education_values, categorical_values])
 
         first_categorical_index = len(self.continuous_columns)
         categorical_indices = list(range(first_categorical_index, len(smote_columns)))
-        smote = SMOTENC(categorical_features=categorical_indices, sampling_strategy="auto",
-                        k_neighbors=self.k_neighbors, random_state=self.random_state)
+        smote = SMOTENC(categorical_features=categorical_indices,
+                        sampling_strategy=self.smote_config["smote_sampling_strategy"],
+                        k_neighbors=self.smote_config["smote_k_neighbors"],
+                        random_state=self.smote_config["smote_random_state"])
         X_resampled, y_resampled = smote.fit_resample(X_smote, y_train)
 
         resampled_df = pd.DataFrame(X_resampled, columns=smote_columns)
-        resampled_df[self.education_column] = resampled_df[self.education_column].round().clip(1, 5).astype(int)
+        resampled_df[self.education_column] = resampled_df[self.education_column].round().clip(
+            self.education_min, self.education_max).astype(int)
         resampled_df[self.categorical_columns] = resampled_df[self.categorical_columns].round()
 
         category_labels = self.category_encoder.inverse_transform(resampled_df[self.categorical_columns])
@@ -53,7 +61,7 @@ class NeuralNetworkSmotePreprocessing(NeuralNetworkPreprocessing):
 
     def save(self):
         super().save()
-        self.smote_train_df.to_csv(OUTPUT_DIRECTORY / "loan_data_nn_normal_train_smote.csv", index=False)
+        self.smote_train_df.to_csv(OUTPUT_DIRECTORY / self.smote_config["smote_output_filename"], index=False)
 
     def run(self):
         self.preprocess()
