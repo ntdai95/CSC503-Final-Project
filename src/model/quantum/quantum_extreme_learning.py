@@ -5,9 +5,10 @@ from sklearn.preprocessing import MinMaxScaler
 import pennylane as qml
 
 
-TRAIN_DATA_PATH = Path(__file__).resolve().parent.parent / "data" / "pre-processed" / "loan_data_smoted_raw_train_4.csv"
-TEST_DATA_PATH = Path(__file__).resolve().parent.parent / "data" / "pre-processed" / "loan_data_raw_test_1.csv"
-OUTPUT_DIRECTORY = Path(__file__).resolve().parent.parent / "data" / "pre-processed"
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+TRAIN_DATA_PATH = PROJECT_ROOT / "data" / "pre-processed" / "loan_data_smoted_raw_train_4.csv"
+TEST_DATA_PATH = PROJECT_ROOT / "data" / "pre-processed" / "loan_data_raw_test_1.csv"
+OUTPUT_DIRECTORY = PROJECT_ROOT / "data" / "pre-processed"
 
 
 class QELMIsing:
@@ -25,7 +26,7 @@ class QELMIsing:
         self.nominal_cols = ['person_gender', 'person_home_ownership', 'loan_intent']
         self.numerical_cols = ['person_age', 'person_income', 'loan_int_rate', 'cb_person_cred_hist_length', 'person_emp_exp',
                                'loan_amnt', 'loan_percent_income', 'credit_score']
-        
+
         self.feature_cols = self.ordinal_cols + self.nominal_cols + self.numerical_cols
 
         self.ytrain = self.train_df[self.target].reset_index(drop=True)
@@ -33,7 +34,7 @@ class QELMIsing:
         self.Xtrain = self.train_df[self.feature_cols].copy()
         self.Xtest = self.test_df[self.feature_cols].copy()
 
-        self.num_qubits = len(self.feature_cols)  
+        self.num_qubits = len(self.feature_cols)
         self.dev = qml.device("default.qubit", wires=self.num_qubits)
         self.circuit = qml.QNode(self.qelm_circuit, self.dev)
 

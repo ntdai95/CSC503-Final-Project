@@ -1,19 +1,20 @@
-import pandas as pd
 from pathlib import Path
+import pandas as pd
 
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+INPUT_DATA_PATH = PROJECT_ROOT / "data" / "raw" / "loan_data.csv"
+OUTPUT_DIRECTORY = PROJECT_ROOT / "data" / "pre-processed"
 
-INPUT_DATA_PATH = Path(__file__).resolve().parent.parent / "data" / "raw" / "loan_data.csv"
-OUTPUT_DIRECTORY = Path(__file__).resolve().parent.parent / "data" / "pre-processed"
 
 class HardOutlierFilters:
     def __init__(self, df):
         self.raw_df = df
+        self.output_filename = "loan_data_hard_filtered.csv"
         self.filter_cols = [
             "person_age", "person_emp_exp", "credit_score",
             "person_income", "loan_amnt", "loan_int_rate",
             "loan_percent_income", "cb_person_cred_hist_length",
         ]
-        
         self.bad_mask = None
         self.clean_df = None
 
@@ -39,7 +40,7 @@ class HardOutlierFilters:
         self.clean_df = raw[~self.bad_mask].copy()
 
     def save(self):
-        self.clean_df.to_csv(OUTPUT_DIRECTORY / "loan_data_hard_filtered.csv", index=False)
+        self.clean_df.to_csv(OUTPUT_DIRECTORY / self.output_filename, index=False)
 
     def run(self):
         self.apply_hard_filters()

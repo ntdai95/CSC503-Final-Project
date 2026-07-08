@@ -1,9 +1,7 @@
 from pathlib import Path
 import types
 import pandas as pd
-from baseline_xgboost_07 import BaselineXGBoost
-from smote_xgboost_07 import SmoteXGBoost
-from weighted_xgboost_07 import WeightedXGBoost
+from model.extreme_gradient_boosting import BaselineXGBoost, SmoteXGBoost, WeightedXGBoost
 
 
 ###################################################### QUANTUM PART ###############################################################
