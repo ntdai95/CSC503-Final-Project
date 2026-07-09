@@ -1,34 +1,48 @@
 from pathlib import Path
-from fairlearn.reductions import ErrorRate, EqualizedOdds, ExponentiatedGradient
+from fairlearn.reductions import ErrorRate, ExponentiatedGradient
 from fairlearn.metrics import MetricFrame, false_negative_rate, false_positive_rate, true_negative_rate, true_positive_rate
 import pandas as pd
 import numpy as np
+from sklearn.compose import ColumnTransformer
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from functools import partial
 import matplotlib.pyplot as plt
 import seaborn as sns
+
+try:
+    from .multi_feature_parity import MultiFeatureParity
+except ImportError:
+    from multi_feature_parity import MultiFeatureParity
 
 
 OUTPUT_DIRECTORY = Path(__file__).resolve().parents[2] / "outputs"
 
 
 class FairnessEnhancedModel:
-    def __init__(self, train_df, test_df, estimator,
-                 sensitive_dict={}):
+    def __init__(self, train_df, test_df, estimator, sensitive_dict=None,
+                 sensitive_source_train_df=None, sensitive_source_test_df=None,
+                 needs_encoding=False, model_name="model", max_iter=50):
 
         self.train_df = train_df
         self.test_df = test_df
         self.estimator = estimator
-        self.sensitive_dict = sensitive_dict or {
-            'person_age': 5,
-            'person_income': 6
-        }
-
+        self.needs_encoding = needs_encoding
+        self.model_name = model_name
+        self.max_iter = max_iter
+        self.sensitive_dict = sensitive_dict or {'person_age': {'bins': 5, 'fpr': 0.05, 'fnr': 0.05},
+                                                 'person_income': {'bins': 6, 'fpr': 0.05, 'fnr': 0.05}}
         self.target = 'loan_status'
         self.y_train = train_df[self.target]
         self.X_train = train_df.drop(columns=[self.target])
         self.y_test = test_df[self.target]
         self.X_test = test_df.drop(columns=[self.target])
+        if sensitive_source_train_df is not None:
+            self.sensitive_source_train_df = self._strip_target(sensitive_source_train_df)
+            self.sensitive_source_test_df = self._strip_target(sensitive_source_test_df)
+        else:
+            self.sensitive_source_train_df = self.X_train
+            self.sensitive_source_test_df = self.X_test
 
         self.eval_bins = {
             'person_age':                 5,
@@ -41,10 +55,7 @@ class FairnessEnhancedModel:
             'loan_percent_income':        4,
         }
 
-        self.difference_bound = 0.05
-        self.constraints = EqualizedOdds(difference_bound=self.difference_bound)
-        self.objective = ErrorRate(costs={"fp":0.7, "fn":0.3})
-
+        self.objective = ErrorRate(costs={"fp": 0.7, "fn": 0.3})
         self.metrics_dict = {
             'accuracy': accuracy_score,
             'f1': partial(f1_score, average='binary', zero_division=0),
@@ -56,52 +67,82 @@ class FairnessEnhancedModel:
             'fnr': false_negative_rate,
         }
 
-        self.binned_col_names = []
-        self.bin_edges = {}
-        self.sensitive_train_df = pd.DataFrame(index=self.X_train.index)
-        self.sensitive_test_df = pd.DataFrame(index=self.X_test.index)
-        self.eval_num_test_df = pd.DataFrame(index=self.X_test.index)
+        self.sensitive_train_df = pd.DataFrame(index=self.sensitive_source_train_df.index)
+        self.eval_num_test_df = pd.DataFrame(index=self.sensitive_source_test_df.index)
         self.final_summary_df = pd.DataFrame()
+        self.encoder = None
+        self.X_train_model = None
+        self.X_test_model = None
+        self.mitigator = None
+        self.y_pred = None
 
+    def _strip_target(self, df):
+        return df.drop(columns=[self.target]) if self.target in df.columns else df
 
-    def _create_quantile_bins(self, column, q):
-        _, edges = pd.qcut(self.X_train[column], q=q, duplicates='drop', retbins=True)
+    def _create_quantile_bins(self, source_df, column, q):
+        _, edges = pd.qcut(source_df[column], q=q, duplicates='drop', retbins=True)
         num_bins = len(edges) - 1
         labels = [f'Q{i+1}' for i in range(num_bins)]
 
         edges = edges.copy()
         edges[0] = -np.inf
         edges[-1] = np.inf
-
-        binned = pd.cut(self.X_train[column], bins=edges, labels=labels, include_lowest=True)
+        binned = pd.cut(source_df[column], bins=edges, labels=labels, include_lowest=True)
         return binned, edges, labels
 
-    def _bin_features(self, features_dict):
-        binned_train_df = pd.DataFrame(index=self.X_train.index)
-        binned_test_df = pd.DataFrame(index=self.X_test.index)
+    def _bin_features(self, features_dict, train_source, test_source):
+        binned_train_df = pd.DataFrame(index=train_source.index)
+        binned_test_df = pd.DataFrame(index=test_source.index)
         for col, q in features_dict.items():
-            col_name = f"{col}_bin"
-            binned, edges, labels = self._create_quantile_bins(col, q)
-            binned_train_df[col_name] = binned
-            binned_test_df[col_name] = pd.cut(self.X_test[col], bins=edges,
-                                              labels=labels, include_lowest=True)
-            self.bin_edges[col_name] = (edges, labels)
+            binned, edges, labels = self._create_quantile_bins(train_source, col, q)
+            binned_train_df[col] = binned
+            binned_test_df[col] = pd.cut(test_source[col], bins=edges, labels=labels, include_lowest=True)
+
         return binned_train_df, binned_test_df
 
-    def fit(self):
-        mitigator = ExponentiatedGradient(
-            estimator=self.estimator,
-            constraints=self.constraints,
-            objective=self.objective
+    def _encode_features(self):
+        categorical_columns = self.X_train.select_dtypes(include=["object", "category", "string"]).columns.tolist()
+        numeric_columns = [col for col in self.X_train.columns if col not in categorical_columns]
+        self.encoder = ColumnTransformer(
+            transformers=[
+                ("cat", OneHotEncoder(handle_unknown="ignore"), categorical_columns),
+                ("num", StandardScaler(), numeric_columns),
+            ],
         )
 
-        mitigator.fit(self.X_train, self.y_train, sensitive_features=self.sensitive_train_df)
+        X_train_model = self.encoder.fit_transform(self.X_train)
+        X_test_model = self.encoder.transform(self.X_test)
+        return X_train_model, X_test_model
 
-        self.y_pred = mitigator.predict(self.X_test)
+    def _build_feature_config(self):
+        feature_config = {}
+        for feature, spec in self.sensitive_dict.items():
+            feature_config[feature] = {}
+            for metric in ("fpr", "fnr"):
+                if metric in spec:
+                    feature_config[feature][metric] = spec[metric]
+
+        return feature_config
+
+    def fit(self):
+        if self.needs_encoding:
+            self.X_train_model, self.X_test_model = self._encode_features()
+        else:
+            self.X_train_model, self.X_test_model = self.X_train, self.X_test
+
+        constraints = MultiFeatureParity(self._build_feature_config())
+        self.mitigator = ExponentiatedGradient(
+            estimator=self.estimator,
+            constraints=constraints,
+            objective=self.objective,
+            max_iter=self.max_iter,
+        )
+        self.mitigator.fit(self.X_train_model, self.y_train, sensitive_features=self.sensitive_train_df)
+        self.y_pred = self.mitigator.predict(self.X_test_model)
 
     def evaluate(self):
         num_features = list(self.eval_bins.keys())
-        eval_df = pd.concat([self.X_test, self.eval_num_test_df], axis=1)
+        eval_df = pd.concat([self.sensitive_source_test_df, self.eval_num_test_df], axis=1)
         eval_df = eval_df.drop(columns=num_features)
 
         summary_list = []
@@ -123,14 +164,16 @@ class FairnessEnhancedModel:
         plt.title("Metric Disparity per Feature (Max - Min Metric)")
 
         OUTPUT_DIRECTORY.mkdir(parents=True, exist_ok=True)
-        output_path = OUTPUT_DIRECTORY / "fairness_metric_disparity_heatmap.png"
+        output_path = OUTPUT_DIRECTORY / f"fairness_metric_disparity_heatmap_{self.model_name}.png"
         plt.savefig(output_path)
         plt.close()
         print("Saved fairness heatmap to:", output_path)
 
     def run(self):
-        self.sensitive_train_df, self.sensitive_test_df = self._bin_features(self.sensitive_dict)
+        bin_spec = {feature: spec['bins'] for feature, spec in self.sensitive_dict.items()}
+        self.sensitive_train_df, _ = self._bin_features(bin_spec, self.sensitive_source_train_df,
+                                                         self.sensitive_source_test_df)
         self.fit()
-        _, self.eval_num_test_df = self._bin_features(self.eval_bins)
+        _, self.eval_num_test_df = self._bin_features(self.eval_bins, self.sensitive_source_train_df, self.sensitive_source_test_df)
         self.evaluate()
         self._generate_heatmap()

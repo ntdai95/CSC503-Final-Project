@@ -110,6 +110,13 @@ class QELMIsing:
         return single + pairs
 
     def run(self):
+        train_path = OUTPUT_DIRECTORY / "loan_data_qelm_ising_train.csv"
+        test_path = OUTPUT_DIRECTORY / "loan_data_qelm_ising_test.csv"
+
+        if train_path.exists() and test_path.exists():
+            print(f"QELM output already exists, skipping quantum simulation: {train_path.name}, {test_path.name}")
+            return pd.read_csv(train_path), pd.read_csv(test_path)
+
         self.data_preprocessing()
         Xtrain_quantum = self.quantum_transform(self.Xtrain)
         Xtest_quantum = self.quantum_transform(self.Xtest)
@@ -120,8 +127,8 @@ class QELMIsing:
         test_out = pd.DataFrame(Xtest_quantum, columns=cols)
         test_out[self.target] = self.ytest.values
 
-        train_out.to_csv(OUTPUT_DIRECTORY / "loan_data_qelm_ising_train.csv", index=False)
-        test_out.to_csv(OUTPUT_DIRECTORY / "loan_data_qelm_ising_test.csv", index=False)
+        train_out.to_csv(train_path, index=False)
+        test_out.to_csv(test_path, index=False)
 
         print(f"qubits={self.num_qubits}  train_features={Xtrain_quantum.shape}  test_features={Xtest_quantum.shape}")
 

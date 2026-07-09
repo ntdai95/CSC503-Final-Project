@@ -1,7 +1,7 @@
 from pathlib import Path
 import types
 import pandas as pd
-from model.extreme_gradient_boosting import BaselineXGBoost, SmoteXGBoost, WeightedXGBoost
+from model.extreme_gradient_boosting import BaseModelXGBoost, WeightedXGBoost
 
 
 ###################################################### QUANTUM PART ###############################################################
@@ -11,13 +11,13 @@ INPUT_TESTING_QUANTUM_DATA_PATH = Path(__file__).resolve().parent.parent / "data
 
 print("WITH QUANTUM DF:\n")
 print("BASELINE XGBOOST:")
-baseline_xgboost = BaselineXGBoost(pd.read_csv(INPUT_TRAINING_QUANTUM_DATA_PATH), pd.read_csv(INPUT_TESTING_QUANTUM_DATA_PATH))
+baseline_xgboost = BaseModelXGBoost(pd.read_csv(INPUT_TRAINING_QUANTUM_DATA_PATH), pd.read_csv(INPUT_TESTING_QUANTUM_DATA_PATH))
 
 ###### EXAMPLES ON HOW TO MODIFY MODEL SETTINGS FOR BASELINE XGBOOST (ALL SETTINGS ARE IN THE basemodel_xgboost.py file) #####
 
 # UNCOMMENT THE CORRESPONDING PART BELOW (1, 2, or 3)
 # For other models, add the uncommented part between instance creation such as 
-# smote_xgboost = SmoteXGBoost(pd.read_csv(INPUT_TRAINING_QUANTUM_DATA_PATH), pd.read_csv(INPUT_TESTING_QUANTUM_DATA_PATH)) and
+# smote_xgboost = BaseModelXGBoost(pd.read_csv(INPUT_TRAINING_QUANTUM_DATA_PATH), pd.read_csv(INPUT_TESTING_QUANTUM_DATA_PATH)) and
 # run() method calling such as smote_xgboost.run()
 
 # (1) If any of the basemodel parameters (found in the __init__() method of the BaseModelXGBoost class) need to be changed for 
@@ -41,7 +41,7 @@ baseline_xgboost = BaselineXGBoost(pd.read_csv(INPUT_TRAINING_QUANTUM_DATA_PATH)
 
 baseline_xgboost.run()
 print("SMOTE XGBOOST:")
-smote_xgboost = SmoteXGBoost(pd.read_csv(INPUT_TRAINING_QUANTUM_DATA_PATH), pd.read_csv(INPUT_TESTING_QUANTUM_DATA_PATH))
+smote_xgboost = BaseModelXGBoost(pd.read_csv(INPUT_TRAINING_QUANTUM_DATA_PATH), pd.read_csv(INPUT_TESTING_QUANTUM_DATA_PATH))
 # ADD THE MODIFICATIONS HERE
 smote_xgboost.run()
 print("WEIGHTED XGBOOST:")
@@ -58,11 +58,11 @@ INPUT_TESTING_PCA_DATA_PATH = Path(__file__).resolve().parent.parent / "data" / 
 # There is currently no label (target column) in the pca dfs
 print("\nWITH PCA DF:\n")
 print("BASELINE XGBOOST:")
-baseline_xgboost = BaselineXGBoost(pd.read_csv(INPUT_TRAINING_PCA_DATA_PATH), pd.read_csv(INPUT_TESTING_PCA_DATA_PATH))
+baseline_xgboost = BaseModelXGBoost(pd.read_csv(INPUT_TRAINING_PCA_DATA_PATH), pd.read_csv(INPUT_TESTING_PCA_DATA_PATH))
 # ADD THE MODIFICATIONS HERE AFTER FIXING MISSING LABEL
 baseline_xgboost.run()
 print("SMOTE XGBOOST:")
-smote_xgboost = SmoteXGBoost(pd.read_csv(INPUT_TRAINING_PCA_DATA_PATH), pd.read_csv(INPUT_TESTING_PCA_DATA_PATH))
+smote_xgboost = BaseModelXGBoost(pd.read_csv(INPUT_TRAINING_PCA_DATA_PATH), pd.read_csv(INPUT_TESTING_PCA_DATA_PATH))
 # ADD THE MODIFICATIONS HERE AFTER FIXING MISSING LABEL
 smote_xgboost.run()
 print("WEIGHTED XGBOOST:")

@@ -10,11 +10,6 @@ class HardOutlierFilters:
     def __init__(self, df):
         self.raw_df = df
         self.output_filename = "loan_data_hard_filtered.csv"
-        self.filter_cols = [
-            "person_age", "person_emp_exp", "credit_score",
-            "person_income", "loan_amnt", "loan_int_rate",
-            "loan_percent_income", "cb_person_cred_hist_length",
-        ]
         self.bad_mask = None
         self.clean_df = None
 
