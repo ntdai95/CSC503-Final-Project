@@ -6,6 +6,10 @@ from model.extreme_gradient_boosting import BaseModelXGBoost, WeightedXGBoost
 from model.neural_network import NeuralNetwork, SmoteNeuralNetwork
 from model.quantum import QELMIsing
 from fairness import FairnessEnhancedModel, SampleWeightedMLPClassifier
+from preprocessing.normalize_neural_network_clean_data import NeuralNetworkCleanDataNormalizer
+from preprocessing.normalize_neural_network_smote_data import NeuralNetworkSmoteDataNormalizer
+from config import NORMALIZE_NEURAL_NETWORK_CLEAN_DATA_CONFIG, NORMALIZE_NEURAL_NETWORK_SMOTE_DATA_CONFIG
+from config import MODEL_NEURAL_NETWORK_CLEAN_DATA_CONFIG, MODEL_NEURAL_NETWORK_SMOTE_DATA_CONFIG
 
 
 RAW_DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "raw"
@@ -56,6 +60,25 @@ neural_network.run()
 print("\n\nSmote Neural Network:\n")
 smote_neural_network = SmoteNeuralNetwork(nn_smote_train_df, nn_test_df)
 smote_neural_network.run()
+
+
+#################### Neural Network: Normalize Existing Data ####################
+print("\n#################### Neural Network: Normalize Existing Data ####################\n")
+NeuralNetworkCleanDataNormalizer(clean_train_df, test_df).run()
+NeuralNetworkSmoteDataNormalizer(smoted_train_df, test_df).run()
+
+nn_clean_normalized_train_df = pd.read_csv(DATA_DIR / NORMALIZE_NEURAL_NETWORK_CLEAN_DATA_CONFIG["train_output_filename"])
+nn_clean_normalized_test_df = pd.read_csv(DATA_DIR / NORMALIZE_NEURAL_NETWORK_CLEAN_DATA_CONFIG["test_output_filename"])
+nn_smote_normalized_train_df = pd.read_csv(DATA_DIR / NORMALIZE_NEURAL_NETWORK_SMOTE_DATA_CONFIG["train_output_filename"])
+nn_smote_normalized_test_df = pd.read_csv(DATA_DIR / NORMALIZE_NEURAL_NETWORK_SMOTE_DATA_CONFIG["test_output_filename"])
+
+print("\nNeural Network Using Clean Training Data:\n")
+clean_data_neural_network = NeuralNetwork(nn_clean_normalized_train_df, nn_clean_normalized_test_df, config=MODEL_NEURAL_NETWORK_CLEAN_DATA_CONFIG)
+clean_data_neural_network.run()
+
+print("\nNeural Network Using Pre-SMOTEd Training Data:\n")
+smote_data_neural_network = SmoteNeuralNetwork(nn_smote_normalized_train_df, nn_smote_normalized_test_df, config=MODEL_NEURAL_NETWORK_SMOTE_DATA_CONFIG)
+smote_data_neural_network.run()
 
 
 #################################### Quantum #######################################
