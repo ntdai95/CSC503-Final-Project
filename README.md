@@ -39,18 +39,30 @@
 Python version: Python 3.13.7
 ```bash
 pip3 install -r requirements.txt
+
+# xgboost Python package on macOS requires the OpenMP library (libomp) to run
+brew install libomp
 ```
 
 ### Neural Network
 Run the following commands from the project root:
 ```bash
-# Preprocessing
+# Preprocessing - train/test split, then normalize, then SMOTE
 python -m src.preprocessing.preprocessing_neural_network
 python -m src.preprocessing.preprocessing_neural_network_smote
 
-# Train Model
+# Train Model - train/test split, then normalize, then SMOTE
 python -m src.model.neural_network.neural_network
 python -m src.model.neural_network.smote_neural_network
+
+# Preprocessing - train/test split, then SMOTE, then normalize
+# dataset these scripts ues already split and SMOTE, so these scripts only normalize and encodes
+python -m src.preprocessing.normalize_neural_network_clean_data
+python -m src.preprocessing.normalize_neural_network_smote_data
+
+# Train Model - train/test split, then SMOTE, then normalize
+python -m src.model.neural_network.clean_data_neural_network
+python -m src.model.neural_network.smote_data_neural_network
 ```
 
 The train model commands save:
