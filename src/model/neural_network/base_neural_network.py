@@ -1,10 +1,11 @@
 from copy import deepcopy
 from pathlib import Path
 from joblib import dump
-from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, f1_score, precision_score, recall_score
 from sklearn.model_selection import RandomizedSearchCV, StratifiedKFold
 from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline
+from fairlearn.metrics import true_positive_rate, true_negative_rate, false_positive_rate, false_negative_rate
 
 try:
     from src.config import DATA_COLUMN_CONFIG
@@ -54,18 +55,29 @@ class BaseNeuralNetwork:
         self.y_pred = self.best_nn_model.predict(self.X_test)
         cm = confusion_matrix(self.y_test, self.y_pred)
         by_class_accuracy = cm.diagonal() / cm.sum(axis=1)
-
         print("Best CV F1 score:", self.nn_search.best_score_)
         print("Best parameters:")
         print(self.nn_search.best_params_)
+        print("\nClassification report:")
+        print(classification_report(self.y_test, self.y_pred))
         print("\nConfusion matrix: Row: Actual class, Column: Predicted class")
         print(cm)
         print("\nBy-class accuracy:")
         for class_label, accuracy in zip(self.best_nn_model.classes_, by_class_accuracy):
             print(f"Class {class_label}: {accuracy:.4f}")
 
-        print("\nClassification report:")
-        print(classification_report(self.y_test, self.y_pred))
+        print("\nSummary metrics (Test):")
+        print(f"Accuracy: {accuracy_score(self.y_test, self.y_pred):.4f}")
+        print(f"F1-score: {f1_score(self.y_test, self.y_pred, average='binary', zero_division=0):.4f}")
+        print(f"Precision: {precision_score(self.y_test, self.y_pred, zero_division=0):.4f}")
+        print(f"Recall: {recall_score(self.y_test, self.y_pred, zero_division=0):.4f}")
+        print(f"TPR: {true_positive_rate(self.y_test, self.y_pred):.4f}")
+        print(f"TNR: {true_negative_rate(self.y_test, self.y_pred):.4f}")
+        print(f"FPR: {false_positive_rate(self.y_test, self.y_pred):.4f}")
+        print(f"FNR: {false_negative_rate(self.y_test, self.y_pred):.4f}")
+
+    def get_best_model_params(self):
+        return self.best_nn_model.named_steps["model"].get_params()
 
     def save(self):
         MODEL_DIRECTORY.mkdir(parents=True, exist_ok=True)

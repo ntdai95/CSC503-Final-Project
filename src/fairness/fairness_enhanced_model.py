@@ -22,7 +22,7 @@ OUTPUT_DIRECTORY = Path(__file__).resolve().parents[2] / "outputs"
 class FairnessEnhancedModel:
     def __init__(self, train_df, test_df, estimator, sensitive_dict=None,
                  sensitive_source_train_df=None, sensitive_source_test_df=None,
-                 needs_encoding=False, model_name="model", max_iter=50):
+                 needs_encoding=False, model_name="model", max_iter=50, show_plot=False):
 
         self.train_df = train_df
         self.test_df = test_df
@@ -30,6 +30,7 @@ class FairnessEnhancedModel:
         self.needs_encoding = needs_encoding
         self.model_name = model_name
         self.max_iter = max_iter
+        self.show_plot = show_plot
         self.sensitive_dict = sensitive_dict or {'person_age': {'bins': 5, 'fpr': 0.05, 'fnr': 0.05},
                                                  'person_income': {'bins': 6, 'fpr': 0.05, 'fnr': 0.05}}
         self.target = 'loan_status'
@@ -141,10 +142,17 @@ class FairnessEnhancedModel:
         self.y_pred = self.mitigator.predict(self.X_test_model)
 
     def evaluate(self):
+        print("Summary metrics (Test):")
+        print(f"Accuracy: {self.metrics_dict['accuracy'](self.y_test, self.y_pred):.4f}")
+        print(f"F1-score: {self.metrics_dict['f1'](self.y_test, self.y_pred):.4f}")
+        print(f"Precision: {self.metrics_dict['precision'](self.y_test, self.y_pred):.4f}")
+        print(f"Recall: {self.metrics_dict['recall'](self.y_test, self.y_pred):.4f}")
+        print(f"TPR: {self.metrics_dict['tpr'](self.y_test, self.y_pred):.4f}")
+        print(f"TNR: {self.metrics_dict['tnr'](self.y_test, self.y_pred):.4f}")
+        print(f"FPR: {self.metrics_dict['fpr'](self.y_test, self.y_pred):.4f}")
+        print(f"FNR: {self.metrics_dict['fnr'](self.y_test, self.y_pred):.4f}")
         num_features = list(self.eval_bins.keys())
-        eval_df = pd.concat([self.sensitive_source_test_df, self.eval_num_test_df], axis=1)
-        eval_df = eval_df.drop(columns=num_features)
-
+        eval_df = pd.concat([self.sensitive_source_test_df.drop(columns=num_features), self.eval_num_test_df], axis=1)
         summary_list = []
         for col in eval_df.columns:
             mf = MetricFrame(metrics=self.metrics_dict,
@@ -160,14 +168,17 @@ class FairnessEnhancedModel:
     def _generate_heatmap(self):
         plt.figure(figsize=(8, 4))
         sns.heatmap(self.final_summary_df, annot=True, cmap="Blues", fmt=".3f")
-        plt.tight_layout()
         plt.title("Metric Disparity per Feature (Max - Min Metric)")
+        plt.tight_layout()
+        if self.show_plot:
+            plt.show()
+        else:
+            OUTPUT_DIRECTORY.mkdir(parents=True, exist_ok=True)
+            output_path = OUTPUT_DIRECTORY / f"fairness_metric_disparity_heatmap_{self.model_name}.png"
+            plt.savefig(output_path)
+            print("Saved fairness heatmap to:", output_path)
 
-        OUTPUT_DIRECTORY.mkdir(parents=True, exist_ok=True)
-        output_path = OUTPUT_DIRECTORY / f"fairness_metric_disparity_heatmap_{self.model_name}.png"
-        plt.savefig(output_path)
         plt.close()
-        print("Saved fairness heatmap to:", output_path)
 
     def run(self):
         bin_spec = {feature: spec['bins'] for feature, spec in self.sensitive_dict.items()}

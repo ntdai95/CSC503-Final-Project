@@ -1,7 +1,12 @@
+import warnings
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.exceptions import ConvergenceWarning
 from sklearn.neural_network import MLPClassifier
 from sklearn.utils import check_random_state
+
+
+warnings.filterwarnings("ignore", category=ConvergenceWarning)
 
 
 class SampleWeightedMLPClassifier(BaseEstimator, ClassifierMixin):
@@ -20,13 +25,17 @@ class SampleWeightedMLPClassifier(BaseEstimator, ClassifierMixin):
             sampled_indices = rng.choice(len(X), size=len(X), replace=True, p=probabilities)
             X_resampled, y_resampled = X[sampled_indices], y[sampled_indices]
 
-        self.model_ = MLPClassifier(random_state=self.random_state, **(self.mlp_kwargs or {}))
+        self.model_ = MLPClassifier()
+        self.model_.random_state = self.random_state
+        for param_name, param_value in (self.mlp_kwargs or {}).items():
+            setattr(self.model_, param_name, param_value)
+
         self.model_.fit(X_resampled, y_resampled)
         self.classes_ = self.model_.classes_
         return self
 
     def predict(self, X):
-        return self.model_.predict(X)
+        return self.model_.predict(np.asarray(X))
 
     def predict_proba(self, X):
-        return self.model_.predict_proba(X)
+        return self.model_.predict_proba(np.asarray(X))

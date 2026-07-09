@@ -27,6 +27,7 @@ class MultiFeatureParity(ClassificationMoment):
             for metric, bound in metrics.items():
                 self.sub_moments[(feature, metric)] = self._load_sub_moment(
                     X, y, feature_column=sensitive_features[feature], metric=metric, bound=bound)
+
         self._index = self.bound().index
 
     @property
