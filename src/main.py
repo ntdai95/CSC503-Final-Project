@@ -102,6 +102,12 @@ for col in categorical_cols:
     fairness_train_df[col] = fairness_train_df[col].astype("category")
     fairness_test_df[col] = fairness_test_df[col].astype("category")
 
+fairness_smote_train_df = smoted_train_df.copy()
+fairness_smote_test_df = test_df.copy()
+for col in categorical_cols:
+    fairness_smote_train_df[col] = fairness_smote_train_df[col].astype("category")
+    fairness_smote_test_df[col] = fairness_smote_test_df[col].astype("category")
+
 def tuned_xgboost_estimator(base_model):
     estimator = XGBClassifier()
     for param_name, param_value in base_model.get_best_model_params().items():
@@ -123,6 +129,13 @@ fairness_xgboost_model = FairnessEnhancedModel(fairness_train_df, fairness_test_
 fairness_xgboost_model.run()
 
 
+print("\n\nFairness SMOTE XGBOOST:\n")
+fairness_smote_xgboost_estimator = tuned_xgboost_estimator(smote_xgboost)
+fairness_smote_xgboost_model = FairnessEnhancedModel(fairness_smote_train_df, fairness_smote_test_df, fairness_smote_xgboost_estimator,
+                                                     needs_encoding=False, model_name="xgboost_smote", max_iter=20)
+fairness_smote_xgboost_model.run()
+
+
 print("\n\nFairness QELM + Smote XGBOOST:\n")
 fairness_qelm_xgboost_estimator = tuned_xgboost_estimator(qelm_smote_xgboost)
 fairness_qelm_xgboost_model = FairnessEnhancedModel(qelm_train_df, qelm_test_df, fairness_qelm_xgboost_estimator,
@@ -139,6 +152,15 @@ fairness_nn_model = FairnessEnhancedModel(nn_train_df, nn_test_df, fairness_nn_e
                                           sensitive_source_test_df=test_df,
                                           needs_encoding=False, model_name="neural_network", max_iter=20)
 fairness_nn_model.run()
+
+
+print("\n\nFairness SMOTE Neural Network:\n")
+fairness_smote_nn_estimator = tuned_nn_estimator(smote_neural_network)
+fairness_smote_nn_model = FairnessEnhancedModel(nn_smote_train_df, nn_smote_test_df, fairness_smote_nn_estimator,
+                                                sensitive_source_train_df=smoted_train_df,
+                                                sensitive_source_test_df=test_df,
+                                                needs_encoding=False, model_name="neural_network_smote", max_iter=20)
+fairness_smote_nn_model.run()
 
 
 print("\n\nFairness QELM + Smote Neural Network:\n")
