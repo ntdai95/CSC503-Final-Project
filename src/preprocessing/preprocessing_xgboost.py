@@ -20,9 +20,11 @@ class XGBoostPreprocessing:
         self.contamination = 0.05
         self.categorical_columns = ["person_gender", "person_home_ownership", "loan_intent"]
         self.test_output_filename = "loan_data_raw_test_1.csv"
-        self.outlier_output_filename = "loan_data_outlier_train_2.csv"
-        self.clean_output_filename = "loan_data_clean_train_3.csv"
+        self.outlier_train_output_filename = "loan_data_outlier_train_2.csv"
+        self.clean_train_output_filename = "loan_data_clean_train_3.csv"
         self.smote_output_filename = "loan_data_smoted_raw_train_4.csv"
+        self.clean_test_output_filename = "loan_data_clean_test_5.csv"
+        self.outlier_test_output_filename = "loan_data_outlier_test_6.csv"
         self.train_df = None
         self.test_df = None
         self.outlier_train_df = None
@@ -42,14 +44,24 @@ class XGBoostPreprocessing:
             if feature_column != self.target_column:
                 numerical_features.append(feature_column)
 
-        X = self.train_df[numerical_features].values
+        X_train = self.train_df[numerical_features].values
+        X_test = self.test_df[numerical_features].values
+
         isolation_forest = IsolationForest(n_estimators=self.n_estimators, contamination=self.contamination,
                                            random_state=self.random_state)
-        predictions = isolation_forest.fit_predict(X)
-        self.outlier_train_df = self.train_df[predictions == -1].reset_index(drop=True)
-        self.clean_train_df = self.train_df[predictions == 1].reset_index(drop=True)
-        self.outlier_train_df.to_csv(OUTPUT_DIRECTORY / self.outlier_output_filename, index=False)
-        self.clean_train_df.to_csv(OUTPUT_DIRECTORY / self.clean_output_filename, index=False)
+        isolation_forest.fit(X_train)
+        train_predictions = isolation_forest.predict(X_train)
+        test_predictions = isolation_forest.predict(X_test) # Make prediction using the model trained on training data
+
+        self.outlier_train_df = self.train_df[train_predictions == -1].reset_index(drop=True)
+        self.clean_train_df = self.train_df[train_predictions == 1].reset_index(drop=True)
+        self.outlier_test_df = self.test_df[test_predictions == -1].reset_index(drop=True)
+        self.clean_test_df = self.test_df[test_predictions == 1].reset_index(drop=True)
+
+        self.outlier_train_df.to_csv(OUTPUT_DIRECTORY / self.outlier_train_output_filename, index=False)
+        self.clean_train_df.to_csv(OUTPUT_DIRECTORY / self.clean_train_output_filename, index=False)
+        self.outlier_test_df.to_csv(OUTPUT_DIRECTORY / self.outlier_test_output_filename, index=False)
+        self.clean_test_df.to_csv(OUTPUT_DIRECTORY / self.clean_test_output_filename, index=False)
 
     def apply_smote_nc(self):
         X = self.clean_train_df.drop(columns=self.target_column)

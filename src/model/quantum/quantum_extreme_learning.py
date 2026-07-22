@@ -1,7 +1,7 @@
 import pandas as pd
 from pathlib import Path
 import numpy as np
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import QuantileTransformer
 import pennylane as qml
 
 
@@ -12,12 +12,10 @@ OUTPUT_DIRECTORY = PROJECT_ROOT / "data" / "pre-processed"
 
 
 class QELMIsing:
-    def __init__(self):
-        self.train_df = pd.read_csv(TRAIN_DATA_PATH)
-        self.test_df = pd.read_csv(TEST_DATA_PATH)
-
-        # Sensitive attributes: EXCLUDED from the model, kept only for fairness auditing
-        # self.sensitive_cols = ['person_gender', 'person_age']
+    def __init__(self, train_df, test_df, _is_normal=True):
+        self.train_df = train_df
+        self.test_df = test_df
+        self._is_normal = _is_normal
 
         self.target = 'loan_status'
 
@@ -46,7 +44,7 @@ class QELMIsing:
         self.dt = 0.1               # Trotter step size
 
         self.nominal_maps = {}
-        self.scaler = MinMaxScaler(feature_range=(0, np.pi))
+        self.scaler = QuantileTransformer(output_distribution="uniform", random_state=42)
 
     # Encoding
     def fit_nominal_encoders(self):
@@ -68,8 +66,8 @@ class QELMIsing:
         self.Xtrain = self.apply_nominal_encoders(self.Xtrain)
         self.Xtest = self.apply_nominal_encoders(self.Xtest)
 
-        self.Xtrain = self.scaler.fit_transform(self.Xtrain)
-        self.Xtest = self.scaler.transform(self.Xtest)
+        self.Xtrain = self.scaler.fit_transform(self.Xtrain) * np.pi
+        self.Xtest = self.scaler.transform(self.Xtest) * np.pi
 
     def angle_encoding(self, x_vector):
         qml.AngleEmbedding(features=x_vector, wires=range(self.num_qubits), rotation='Y')
@@ -95,23 +93,27 @@ class QELMIsing:
         self.ising_reservoir()
 
         observables = [qml.PauliZ(i) for i in range(self.num_qubits)]
-        for i in range(self.num_qubits - 1):
-            for j in range(i + 1, self.num_qubits):
-                observables.append(qml.PauliZ(i) @ qml.PauliZ(j))
+        observables.extend(qml.PauliX(i) for i in range(self.num_qubits))
+        observables.extend(qml.PauliY(i) for i in range(self.num_qubits))
+        
         return [qml.expval(obs) for obs in observables]
 
     def quantum_transform(self, X):
         return np.array([self.circuit(row) for row in X])
 
     def _feature_names(self):
-        single = [f"z_{i}" for i in range(self.num_qubits)]
-        pairs = [f"zz_{i}_{j}" for i in range(self.num_qubits - 1)
-                 for j in range(i + 1, self.num_qubits)]
-        return single + pairs
+        single_z = [f"z_{i}" for i in range(self.num_qubits)]
+        single_x = [f"x_{i}" for i in range(self.num_qubits)]
+        single_y = [f"y_{i}" for i in range(self.num_qubits)]
+        return single_z + single_x + single_y
 
     def run(self):
-        train_path = OUTPUT_DIRECTORY / "loan_data_qelm_ising_train.csv"
-        test_path = OUTPUT_DIRECTORY / "loan_data_qelm_ising_test.csv"
+        if self._is_normal == True:
+            train_path = OUTPUT_DIRECTORY / "loan_data_qelm_ising_train_normal.csv"
+            test_path = OUTPUT_DIRECTORY / "loan_data_qelm_ising_test_normal.csv"
+        else:
+            train_path = OUTPUT_DIRECTORY / "loan_data_qelm_ising_train_outliers.csv"
+            test_path = OUTPUT_DIRECTORY / "loan_data_qelm_ising_test_outliers.csv"
 
         if train_path.exists() and test_path.exists():
             print(f"QELM output already exists, skipping quantum simulation: {train_path.name}, {test_path.name}")
@@ -136,4 +138,6 @@ class QELMIsing:
 
 
 if __name__ == "__main__":
-    train_out, test_out = QELMIsing().run()
+    train_df = pd.read_csv(TRAIN_DATA_PATH)
+    test_df = pd.read_csv(TEST_DATA_PATH)
+    train_out, test_out = QELMIsing(train_df, test_df).run()

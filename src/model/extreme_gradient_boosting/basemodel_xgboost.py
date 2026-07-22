@@ -37,7 +37,7 @@ class BaseModelXGBoost:
         self.categorical_cols = self.X_train.select_dtypes(include=["object", "category", "string"]).columns.tolist()
         self.numeric_cols = [col for col in self.X_train.columns if col not in self.categorical_cols]
         self.preprocessor = ColumnTransformer(transformers=[("cat", OneHotEncoder(handle_unknown="ignore"), self.categorical_cols),
-                                                            ("num", StandardScaler(), self.numeric_cols)])
+                                                            ("num", "passthrough", self.numeric_cols)])
         self.xgb_search = None
         self.best_xgb_model = None
         self.y_pred = None

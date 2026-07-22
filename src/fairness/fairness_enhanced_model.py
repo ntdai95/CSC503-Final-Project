@@ -22,7 +22,7 @@ OUTPUT_DIRECTORY = Path(__file__).resolve().parents[2] / "outputs"
 class FairnessEnhancedModel:
     def __init__(self, train_df, test_df, estimator, sensitive_dict=None,
                  sensitive_source_train_df=None, sensitive_source_test_df=None,
-                 needs_encoding=False, model_name="model", max_iter=50, show_plot=False):
+                 needs_encoding=False, model_name="model", max_iter=50, show_plot=False, _is_normal=True):
 
         self.train_df = train_df
         self.test_df = test_df
@@ -56,7 +56,7 @@ class FairnessEnhancedModel:
             'loan_percent_income':        4,
         }
 
-        self.objective = ErrorRate(costs={"fp": 0.7, "fn": 0.3})
+        self.objective = ErrorRate(costs={"fp": 0.3, "fn": 0.7})
         self.metrics_dict = {
             'accuracy': accuracy_score,
             'f1': partial(f1_score, average='binary', zero_division=0),
@@ -76,6 +76,11 @@ class FairnessEnhancedModel:
         self.X_test_model = None
         self.mitigator = None
         self.y_pred = None
+
+        if _is_normal == True:
+            self.tag = "Normal"
+        else:
+            self.tag = "Outliers"
 
     def _strip_target(self, df):
         return df.drop(columns=[self.target]) if self.target in df.columns else df
@@ -174,7 +179,7 @@ class FairnessEnhancedModel:
             plt.show()
         else:
             OUTPUT_DIRECTORY.mkdir(parents=True, exist_ok=True)
-            output_path = OUTPUT_DIRECTORY / f"fairness_metric_disparity_heatmap_{self.model_name}.png"
+            output_path = OUTPUT_DIRECTORY / f"fairness_metric_disparity_heatmap_{self.model_name}_{self.tag}.png"
             plt.savefig(output_path)
             print("Saved fairness heatmap to:", output_path)
 
