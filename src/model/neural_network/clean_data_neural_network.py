@@ -2,10 +2,7 @@ from pathlib import Path
 import pandas as pd
 from .neural_network import NeuralNetwork
 
-try:
-    from src.config import MODEL_NEURAL_NETWORK_CLEAN_DATA_CONFIG
-except ModuleNotFoundError:
-    from config import MODEL_NEURAL_NETWORK_CLEAN_DATA_CONFIG
+from ...config import MODEL_NEURAL_NETWORK_CLEAN_DATA_CONFIG
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]

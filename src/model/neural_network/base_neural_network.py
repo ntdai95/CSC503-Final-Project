@@ -7,10 +7,7 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline
 from fairlearn.metrics import true_positive_rate, true_negative_rate, false_positive_rate, false_negative_rate
 
-try:
-    from src.config import DATA_COLUMN_CONFIG
-except ModuleNotFoundError:
-    from config import DATA_COLUMN_CONFIG
+from ...config import DATA_COLUMN_CONFIG
 
 
 MODEL_DIRECTORY = Path(__file__).resolve().parents[3] / "models"

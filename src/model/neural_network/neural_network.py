@@ -2,10 +2,7 @@ from pathlib import Path
 import pandas as pd
 from .base_neural_network import BaseNeuralNetwork
 
-try:
-    from src.config import MODEL_NEURAL_NETWORK_CONFIG
-except ModuleNotFoundError:
-    from config import MODEL_NEURAL_NETWORK_CONFIG
+from ...config import MODEL_NEURAL_NETWORK_CONFIG
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]

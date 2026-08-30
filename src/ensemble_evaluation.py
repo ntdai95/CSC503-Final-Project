@@ -1,18 +1,3 @@
-"""Ensemble (pooled) evaluation of the two specialist models.
-
-The pipeline trains one set of models on the "normal" partition and one on the
-"outlier" partition (split by Isolation Forest). Because every test row belongs
-to exactly one partition, the ensemble is a router / mixture-of-experts: each
-row is scored by its partition's specialist. The all-data performance of a
-model type is therefore obtained by POOLING the raw predictions of both
-specialists and computing metrics once on the pooled arrays (equivalent to
-summing the two confusion matrices).
-
-SMOTE variants only exist on the normal partition, so they are paired with the
-corresponding non-SMOTE specialist on the outlier partition (hybrid ensemble),
-as recorded in SMOTE_FALLBACKS.
-"""
-
 from functools import partial
 from pathlib import Path
 

@@ -52,14 +52,6 @@ MODEL_NEURAL_NETWORK_CONFIG = {
     "search_param_distributions": MODEL_NEURAL_NETWORK_SEARCH_SPACE,
 }
 
-# MODEL_NEURAL_NETWORK_SMOTE_SEARCH_SPACE = {
-#     "model__hidden_layer_sizes": [(32,), (64,), (128,), (64, 32), (128, 64), (128, 64, 32)],
-#     "model__activation": ["relu", "tanh"],
-#     "model__alpha": loguniform(1e-5, 1e-2),
-#     "model__learning_rate_init": loguniform(1e-4, 5e-3),
-#     "model__batch_size": [64, 128, 256],
-# }
-
 MODEL_NEURAL_NETWORK_SMOTE_CONFIG = {
     "train_filename": "loan_data_nn_normal_train_smote.csv",
     "test_filename": "loan_data_nn_normal_test.csv",
@@ -79,7 +71,6 @@ MODEL_NEURAL_NETWORK_SMOTE_CONFIG = {
     "search_n_jobs": -1,
     "search_verbose": 1,
     "search_param_distributions": MODEL_NEURAL_NETWORK_SEARCH_SPACE,
-    # "search_param_distributions": MODEL_NEURAL_NETWORK_SMOTE_SEARCH_SPACE,
 }
 
 

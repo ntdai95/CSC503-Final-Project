@@ -2,10 +2,7 @@ from pathlib import Path
 import pandas as pd
 from .normalize_neural_network_clean_data import NeuralNetworkCleanDataNormalizer
 
-try:
-    from src.config import NORMALIZE_NEURAL_NETWORK_SMOTE_DATA_CONFIG
-except ModuleNotFoundError:
-    from config import NORMALIZE_NEURAL_NETWORK_SMOTE_DATA_CONFIG
+from ..config import NORMALIZE_NEURAL_NETWORK_SMOTE_DATA_CONFIG
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]

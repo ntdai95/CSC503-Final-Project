@@ -10,10 +10,7 @@ from functools import partial
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-try:
-    from .multi_feature_parity import MultiFeatureParity
-except ImportError:
-    from multi_feature_parity import MultiFeatureParity
+from .multi_feature_parity import MultiFeatureParity
 
 
 OUTPUT_DIRECTORY = Path(__file__).resolve().parents[2] / "outputs"

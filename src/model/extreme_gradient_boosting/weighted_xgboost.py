@@ -2,10 +2,7 @@ from pathlib import Path
 import pandas as pd
 from scipy.stats import uniform
 
-try:
-    from .basemodel_xgboost import BaseModelXGBoost
-except ImportError:
-    from basemodel_xgboost import BaseModelXGBoost
+from .basemodel_xgboost import BaseModelXGBoost
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]

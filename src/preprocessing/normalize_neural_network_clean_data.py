@@ -3,10 +3,7 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
-try:
-    from src.config import DATA_COLUMN_CONFIG, NORMALIZE_NEURAL_NETWORK_CLEAN_DATA_CONFIG
-except ModuleNotFoundError:
-    from config import DATA_COLUMN_CONFIG, NORMALIZE_NEURAL_NETWORK_CLEAN_DATA_CONFIG
+from ..config import DATA_COLUMN_CONFIG, NORMALIZE_NEURAL_NETWORK_CLEAN_DATA_CONFIG
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]

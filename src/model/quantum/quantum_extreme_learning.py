@@ -19,7 +19,6 @@ class QELMIsing:
 
         self.target = 'loan_status'
 
-        # Feature groups
         self.ordinal_cols = ['person_education']
         self.nominal_cols = ['person_gender', 'person_home_ownership', 'loan_intent']
         self.numerical_cols = ['person_age', 'person_income', 'loan_int_rate', 'cb_person_cred_hist_length', 'person_emp_exp',
@@ -36,7 +35,6 @@ class QELMIsing:
         self.dev = qml.device("default.qubit", wires=self.num_qubits)
         self.circuit = qml.QNode(self.qelm_circuit, self.dev)
 
-        # Reservoir hyperparameters
         self.circuit_layers = 1     # 1 Trotter step: more layers scramble the state (thermalize) and erase input info
         self.J = -1                 # ZZ coupling
         self.B_z = 1.5                # longitudinal field
@@ -46,7 +44,6 @@ class QELMIsing:
         self.nominal_maps = {}
         self.scaler = QuantileTransformer(output_distribution="uniform", random_state=42)
 
-    # Encoding
     def fit_nominal_encoders(self):
         df = self.train_df
         for col in self.nominal_cols:
@@ -72,7 +69,6 @@ class QELMIsing:
     def angle_encoding(self, x_vector):
         qml.AngleEmbedding(features=x_vector, wires=range(self.num_qubits), rotation='Y')
 
-    # Reservoir: Trotterized transverse-field Ising model
     def ising_reservoir(self):
         for _ in range(self.circuit_layers):
             # ZZ coupling

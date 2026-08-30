@@ -1,12 +1,12 @@
 from sklearn.preprocessing import StandardScaler
 from xgboost import XGBClassifier
-from model.extreme_gradient_boosting import BaseModelXGBoost, WeightedXGBoost
-from model.neural_network import NeuralNetwork, SmoteNeuralNetwork
-from model.quantum import QELMIsing
-from fairness import FairnessEnhancedModel, SampleWeightedMLPClassifier
-from config import NORMALIZE_NEURAL_NETWORK_CLEAN_DATA_CONFIG, NORMALIZE_NEURAL_NETWORK_SMOTE_DATA_CONFIG
-from config import MODEL_NEURAL_NETWORK_CLEAN_DATA_CONFIG, MODEL_NEURAL_NETWORK_SMOTE_DATA_CONFIG
-from preprocessing import NeuralNetworkCleanDataNormalizer, NeuralNetworkSmoteDataNormalizer
+from .model.extreme_gradient_boosting import BaseModelXGBoost, WeightedXGBoost
+from .model.neural_network import NeuralNetwork, SmoteNeuralNetwork
+from .model.quantum import QELMIsing
+from .fairness import FairnessEnhancedModel, SampleWeightedMLPClassifier
+from .config import NORMALIZE_NEURAL_NETWORK_CLEAN_DATA_CONFIG, NORMALIZE_NEURAL_NETWORK_SMOTE_DATA_CONFIG
+from .config import MODEL_NEURAL_NETWORK_CLEAN_DATA_CONFIG, MODEL_NEURAL_NETWORK_SMOTE_DATA_CONFIG
+from .preprocessing import NeuralNetworkCleanDataNormalizer, NeuralNetworkSmoteDataNormalizer
 import pandas as pd
 from pathlib import Path
 
