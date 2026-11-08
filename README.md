@@ -29,7 +29,7 @@ Pooled (normal + outlier) test set, 8,999 rows, from `python -m src.main`:
 
 Full 12-model table (including every Fairlearn/QELM combination) is regenerated at `outputs/ensemble_metrics_summary.csv`.
 
-**Where the fairness trade-off shows up.** Fairlearn's mitigated XGBoost model has the best F1 of any XGBoost variant, but the mitigated MLP variants trade precision for recall harder than that: `NN_SMOTE_Fairlearn` reaches 79% recall at the cost of dropping to 48% precision. Per-feature disparity heatmaps for every model (`outputs/fairness_metric_disparity_heatmap_*.png`) show that trade per feature instead of folding it into one aggregate number.
+**This is where the fairness trade-off shows up.** Fairlearn's mitigated XGBoost model has the best F1 of any XGBoost variant, but the mitigated MLP variants trade precision for recall harder than that: `NN_SMOTE_Fairlearn` reaches 79% recall at the cost of dropping to 48% precision. Per-feature disparity heatmaps for every model (`outputs/fairness_metric_disparity_heatmap_*.png`) show that trade per feature instead of folding it into one aggregate number.
 
 ## Repository layout
 
@@ -88,6 +88,6 @@ python -m src.model.extreme_gradient_boosting.weighted_xgboost
 python -m src.model.neural_network.smote_data_neural_network
 ```
 
-Run everything as a module (`python -m src.xxx`) from the project root, the package uses relative imports throughout, so running a file directly (`python src/main.py`) will not resolve them.
+Run everything as a module (`python -m src.xxx`) from the project root. The package uses relative imports throughout, so running a file directly (`python src/main.py`) will not resolve them.
 
 Hyperparameters for every model and search space live in `src/config.py`.
