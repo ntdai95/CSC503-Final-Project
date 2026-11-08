@@ -29,7 +29,7 @@ Pooled (normal + outlier) test set, 8,999 rows, from `python -m src.main`:
 
 Full 12-model table (including every Fairlearn/QELM combination) is regenerated at `outputs/ensemble_metrics_summary.csv`.
 
-**The fairness trade-off is visible, not hidden.** Fairlearn's mitigated XGBoost model has the best F1 of any XGBoost variant, but the mitigated MLP variants trade precision for recall harder than that: `NN_SMOTE_Fairlearn` reaches 79% recall at the cost of dropping to 48% precision. Per-feature disparity heatmaps for every model (`outputs/fairness_metric_disparity_heatmap_*.png`) make that trade explicit rather than folding it into one aggregate number.
+**Where the fairness trade-off shows up.** Fairlearn's mitigated XGBoost model has the best F1 of any XGBoost variant, but the mitigated MLP variants trade precision for recall harder than that: `NN_SMOTE_Fairlearn` reaches 79% recall at the cost of dropping to 48% precision. Per-feature disparity heatmaps for every model (`outputs/fairness_metric_disparity_heatmap_*.png`) show that trade per feature instead of folding it into one aggregate number.
 
 ## Repository layout
 
