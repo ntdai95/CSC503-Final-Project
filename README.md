@@ -2,17 +2,17 @@
 
 [![Kaggle Dataset](https://img.shields.io/badge/Kaggle-Dataset-blue?logo=kaggle)](https://www.kaggle.com/datasets/sumit12100012/loan-approval-classification/data)
 
-A binary loan-approval classifier compared across six angles on the same dataset: raw vs. SMOTE-balanced training data, class weighting, a quantum-simulated feature transform, and Fairlearn-mitigated fairness constraints — for both XGBoost and a tuned MLP.
+A binary loan-approval classifier compared across six angles on the same dataset: raw vs. SMOTE-balanced training data, class weighting, a quantum-simulated feature transform, and Fairlearn-mitigated fairness constraints, for both XGBoost and a tuned MLP.
 
 ## Architecture
 
-Isolation Forest splits every row into two partitions before any model sees it: **normal** (inliers, ~85% of rows) and **outlier** (~5% contamination). Each partition gets its own specialists — an XGBoost family and a neural-network family, each in six variants (baseline, SMOTE, class-weighted, QELM-transformed, and Fairlearn-mitigated versions of the baseline and SMOTE models). SMOTE only applies to the normal partition, so on the outlier side its slot is filled by the non-SMOTE specialist instead.
+Isolation Forest splits every row into two partitions before any model sees it: **normal** (inliers, ~85% of rows) and **outlier** (~5% contamination). Each partition gets its own specialists, an XGBoost family and a neural-network family, each in six variants (baseline, SMOTE, class-weighted, QELM-transformed, and Fairlearn-mitigated versions of the baseline and SMOTE models). SMOTE only applies to the normal partition, so on the outlier side its slot is filled by the non-SMOTE specialist instead.
 
-At evaluation time this is a mixture of experts: every test row belongs to exactly one partition, so the all-data score for a model type is obtained by pooling the two specialists' raw predictions and scoring once on the pooled array — equivalent to summing their confusion matrices (`ensemble_evaluation.py`).
+At evaluation time this is a mixture of experts: every test row belongs to exactly one partition, so the all-data score for a model type is obtained by pooling the two specialists' raw predictions and scoring once on the pooled array, equivalent to summing their confusion matrices (`ensemble_evaluation.py`).
 
 **Quantum feature transform (`model/quantum/quantum_extreme_learning.py`).** Each row is angle-encoded into a 12-qubit state and evolved through one Trotter step of a transverse-field Ising Hamiltonian (PennyLane `default.qubit`), then read out as 36 Pauli expectation values (⟨Z⟩, ⟨X⟩, ⟨Y⟩ per qubit). This quantum reservoir replaces the original 12 features with a fixed nonlinear embedding of them, which XGBoost and the MLP then train on identically to the other variants.
 
-**Fairness mitigation (`fairness/`).** `FairnessEnhancedModel` wraps each tuned model in Fairlearn's `ExponentiatedGradient`, constrained by a custom `MultiFeatureParity` moment that enforces FPR and FNR parity across age and income bins *simultaneously* (Fairlearn's built-in moments only cover one sensitive feature at a time), optimizing a cost-sensitive `ErrorRate` objective (false negatives weighted 0.7 vs. 0.3 for false positives — missing an approvable applicant costs more than approving a bad one). Since scikit-learn's `MLPClassifier` doesn't accept `sample_weight`, `SampleWeightedMLPClassifier` implements Fairlearn's reweighting contract via weighted resampling instead.
+**Fairness mitigation (`fairness/`).** `FairnessEnhancedModel` wraps each tuned model in Fairlearn's `ExponentiatedGradient`, constrained by a custom `MultiFeatureParity` moment that enforces FPR and FNR parity across age and income bins *simultaneously* (Fairlearn's built-in moments only cover one sensitive feature at a time), optimizing a cost-sensitive `ErrorRate` objective (false negatives weighted 0.7 vs. 0.3 for false positives, missing an approvable applicant costs more than approving a bad one). Since scikit-learn's `MLPClassifier` doesn't accept `sample_weight`, `SampleWeightedMLPClassifier` implements Fairlearn's reweighting contract via weighted resampling instead.
 
 ## Headline results
 
@@ -88,6 +88,6 @@ python -m src.model.extreme_gradient_boosting.weighted_xgboost
 python -m src.model.neural_network.smote_data_neural_network
 ```
 
-Run everything as a module (`python -m src.xxx`) from the project root — the package uses relative imports throughout, so running a file directly (`python src/main.py`) will not resolve them.
+Run everything as a module (`python -m src.xxx`) from the project root, the package uses relative imports throughout, so running a file directly (`python src/main.py`) will not resolve them.
 
 Hyperparameters for every model and search space live in `src/config.py`.
