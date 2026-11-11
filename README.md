@@ -2,7 +2,7 @@
 
 [![Kaggle Dataset](https://img.shields.io/badge/Kaggle-Dataset-blue?logo=kaggle)](https://www.kaggle.com/datasets/sumit12100012/loan-approval-classification/data)
 
-This project was completed by a team of six. It compares a binary loan-approval classifier across six angles on the same dataset: raw vs. SMOTE-balanced training data, class weighting, a quantum-simulated feature transform, and Fairlearn-mitigated fairness constraints, for both XGBoost and a tuned MLP.
+This project was completed by a team of six for Data Mining (CSC 503) at the University of Victoria. It compares a binary loan-approval classifier across six angles on the same dataset: raw vs. SMOTE-balanced training data, class weighting, a quantum-simulated feature transform, and Fairlearn-mitigated fairness constraints, for both XGBoost and a tuned MLP.
 
 ## Architecture
 
